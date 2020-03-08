@@ -3,19 +3,6 @@
 
 import Pyro4
 
-# def connect():
-#     server_names =  ["server2", "server3"]
-#     active_servers = []
-#     for name in server_names:
-#         try:
-#             server = Pyro4.Proxy("PYRONAME:%s" % name)
-#             print("Connected to %s" % name)
-#             print(server.isPrimary())
-#             # active_servers.append(name)
-#             break
-#         except:
-#             pass
-
 @Pyro4.expose
 class JustHungry(object):
     categories = ["starter", "main course", "drink", "dessert"]
@@ -48,31 +35,35 @@ class JustHungry(object):
             if product[1]==category:
                 category_products.append(product)
         return category_products
-    def setOrder(self, order_list, order_price):
-        self.orders.append([order_list, order_price])
-        if self.isPrimary():
-            try:
-                server = Pyro4.Proxy("PYRONAME:server2") 
-                server.setSlave()
-                server.updateOrders(self.orders)
-            except:
-                print("Server2 is not running")
-                pass
-            try:
-                server = Pyro4.Proxy("PYRONAME:server3")
-                server.setSlave()
-                server.updateOrders(self.orders)
-            except:
-                print("Server3 is not running")
-                pass
+    def getLastId(self):
+        if len(self.orders)>0:
+            print("in")
+            return self.orders[len(self.orders)-1][0]
+        else:
+            print("here")
+            return 0
+    def setOrder(self,order_Id, order_list, order_price,order_time):
+        self.orders.append([order_Id,order_list, order_price,order_time])
         print(self.orders)
+        try:
+            server = Pyro4.Proxy("PYRONAME:server2")
+            server.updateOrders(self.orders)
+        except:
+            print("Server2 is not running")
+            pass
+        try:
+            server = Pyro4.Proxy("PYRONAME:server3")
+            server.updateOrders(self.orders)
+        except:
+            print("Server3 is not running")
+            pass
         return "Your order has been placed"
     def getOrders(self):
         return self.orders
     
     def updateOrders(self, orders):
         try:
-            self.orders = orders
+            self.orders.extend([order for order in orders if order not in self.orders])
             print(self.orders)
             return "ok"
         except:

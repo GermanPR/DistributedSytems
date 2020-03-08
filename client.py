@@ -1,4 +1,6 @@
 import Pyro4
+from time import gmtime, strftime
+#strftime("%Y-%m-%d %H:%M:%S", gmtime())
 
 fEnd = Pyro4.Proxy("PYRONAME:front_end")
 confirmation = input("Welcome to JustHungry, do you want to order? (y/n)")
@@ -64,7 +66,7 @@ if confirmation=='y' or confirmation=='yes' or confirmation=='Y'or confirmation=
             if orderconf=='y' or orderconf=='yes' or orderconf=='Y'or orderconf=='Yes':
                 #order is of the form order = [["salad","pizza","coca-cola"], 15.2]
                 print("Order registered")
-                print(fEnd.setOrder(order[0],order[1]))
+                print(fEnd.setOrder(order[0],order[1],strftime("%Y-%m-%d %H:%M:%S", gmtime())))
                 print(fEnd.getOrders())
             else:
                 print("Your command was cancelled")

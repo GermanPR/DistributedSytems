@@ -3,82 +3,69 @@ import Pyro4
 
 def connect():
     server_names =  ["server1", "server2", "server3"]
-    prim_servers = []
-    active_servers = []
-    orders = []
-    print("here")
-    if 1:
-        print("onto")
+    #active_servers = []
     for name in server_names:
         try:
             server = Pyro4.Proxy("PYRONAME:%s" % name)
-            print("Connected to %s" % name)
-            print(server.isPrimary())            
-            if server.isPrimary():
-                print("+1")
-                prim_servers.append(name)
-            else:
-                active_servers.append(name)
+            print("Connecting to %s" % name)
+            server.isPrimary()
             # active_servers.append(name)
-            # return server
+            return server,name
         except:
+            print("Cant connect to %s" % name)
             pass
-    print(prim_servers)
-    if len(prim_servers)>1:
-        for name in prim_servers:
-            server = Pyro4.Proxy("PYRONAME:%s" % name)
-            orders.append(server.getOrders())
-        biggest = 0
-        for i in range(len(orders)):
-            if len(orders[i])>len(orders[biggest]):
-                biggest = i
-        server = Pyro4.Proxy("PYRONAME:%s" % prim_servers[biggest])
-        server.setPrimary()
-    elif len(prim_servers)==1:
-        server = Pyro4.Proxy("PYRONAME:%s" % prim_servers[0])
-        server.setPrimary()
-    else:       
-        for name in active_servers:
-            try:
-                server = Pyro4.Proxy("PYRONAME:%s" % name)
-                orders.append(server.getOrders())
-            except:
-                pass
-        biggest = 0
-        print(orders)
-        for i in range(len(orders)):
-            if len(orders[i])>len(orders[biggest]):
-                biggest = i
-        server = Pyro4.Proxy("PYRONAME:%s" % active_servers[biggest])
-        server.setPrimary()
-        print("Connected to %s" % name)
-        print(server.isPrimary())
 
-    print(server)
-    return server
-    
-
-
-    # if len(active_servers)>0:
-    #     for i in range(len(active_servers)):
-    #         if i==0:
-    #             server = Pyro4.Proxy("PYRONAME:%s" % active_servers[i])
-    print("done")
 
 @Pyro4.expose
-class JustHungry(object):
-    server = connect()  
+class FrontEnd(object):
+    last_server='hey'
+    server,last_server = connect()  
+    #print(last_server)
+
     def getCategories(self):
-        server = connect()
+        server,self.last_server = connect()
         return self.server.getCategories()
 
     def getProducts(self, category):
-        server = connect()
+        server,self.last_server = connect()
         return self.server.getProducts(category)
 
-    def setOrder(self, order_list, order_price):
-        server = connect()
-        return self.server.setOrder(order_list,order_price)
+    def setOrder(self, order_list, order_price,order_time):
+        print("last server: " + self.last_server)
+        try:
+            server = Pyro4.Proxy("PYRONAME:%s" % self.last_server)
+            iD = server.getLastId()
+            return self.server.setOrder(iD + 1 , order_list,order_price,order_time)
+        except:
+            # Last server not working
+            print("Last server %s not working, moving to another server" % self.last_server)
+            
+        
+
+        servers = ['server1','server2','server3']
+        servers.remove(self.last_server)
+        active = []
+        for name in servers:
+            try:
+                server = Pyro4.Proxy("PYRONAME:%s" % name)
+                active.append(server,server.getLastId())
+            except:
+                print("the server %s is not available either" % name)
+
+        if len(active)==2:
+            if active[0][1]>=active[1][1]:
+                server = Pyro4.Proxy("PYRONAME:%s" % active[0][0])
+                return self.server.setOrder(active[0][1] + 1, order_list,order_price,order_time)
+            else:
+                server = Pyro4.Proxy("PYRONAME:%s" % active[1][0])
+                return self.server.setOrder(active[1][1]+1, order_list,order_price,order_time)
+        elif len(active)==1:
+            server = Pyro4.Proxy("PYRONAME:%s" % active[0][0])
+            return self.server.setOrder(active[0][1]+1, order_list,order_price,order_time)
+        else:
+            return "No servers are active"
+
+                
     
     def getOrders(self):
         #server = connect()
@@ -103,7 +90,7 @@ class JustHungry(object):
 # print(server2.max(2,2,3))
 daemon = Pyro4.Daemon()                # make a Pyro daemon
 ns = Pyro4.locateNS()                  # find the name server
-uri = daemon.register(JustHungry)   # register the greeting maker as a Pyro object
+uri = daemon.register(FrontEnd)   # register the greeting maker as a Pyro object
 ns.register("front_end", uri)
 print("Ready")
 
