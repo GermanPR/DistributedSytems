@@ -1,0 +1,10 @@
+categories = [starter, main course, drink, dessert]
+products = [[salad, starter, 4],
+            [soup, starter, 5],
+            [salmon, starter, 10],
+            [sandwich, main course, 7],
+            [mac and cheese, main course, 40],
+            [peperoni pizza, main course, 10],
+            [coca-cola, drink, 100],
+            [fanta, drink, 123],
+            [water, drink, 145]]
