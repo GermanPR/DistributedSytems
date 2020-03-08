@@ -1,17 +1,17 @@
 # saved as server.py
 import Pyro4
-def connect():
-    server_names =  ["server1", "server2"]
-    active_servers = []
-    for name in server_names:
-        try:
-            server = Pyro4.Proxy("PYRONAME:%s" % name)
-            print("Connected to %s" % name)
-            print(server.isPrimary())
-            # active_servers.append(name)
-            break
-        except:
-            pass
+# def connect():
+#     server_names =  ["server1", "server2"]
+#     active_servers = []
+#     for name in server_names:
+#         try:
+#             server = Pyro4.Proxy("PYRONAME:%s" % name)
+#             print("Connected to %s" % name)
+#             print(server.isPrimary())
+#             # active_servers.append(name)
+#             break
+#         except:
+#             pass
 
 @Pyro4.expose
 class JustHungry(object):

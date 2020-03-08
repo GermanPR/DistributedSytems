@@ -3,18 +3,18 @@
 
 import Pyro4
 
-def connect():
-    server_names =  ["server2", "server3"]
-    active_servers = []
-    for name in server_names:
-        try:
-            server = Pyro4.Proxy("PYRONAME:%s" % name)
-            print("Connected to %s" % name)
-            print(server.isPrimary())
-            # active_servers.append(name)
-            break
-        except:
-            pass
+# def connect():
+#     server_names =  ["server2", "server3"]
+#     active_servers = []
+#     for name in server_names:
+#         try:
+#             server = Pyro4.Proxy("PYRONAME:%s" % name)
+#             print("Connected to %s" % name)
+#             print(server.isPrimary())
+#             # active_servers.append(name)
+#             break
+#         except:
+#             pass
 
 @Pyro4.expose
 class JustHungry(object):
@@ -33,7 +33,7 @@ class JustHungry(object):
             ["chocolate cake", "dessert", 4]]
 
     orders = []
-    primary = 1
+    primary = 0
     def setPrimary(self):
         self.primary = 1
     def setSlave(self):
