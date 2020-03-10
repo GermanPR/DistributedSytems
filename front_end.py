@@ -1,5 +1,5 @@
-# saved as client.py
 import Pyro4
+import requests
 
 def connect():
     server_names =  ["server1", "server2", "server3"]
@@ -56,12 +56,12 @@ class FrontEnd(object):
         self.server,self.last_server = connect()
         return self.server.getProducts(category)
 
-    def setOrder(self, order_list, order_price,order_time):
+    def setOrder(self, order_list, order_price,order_time,name,postcode):
         print("last server: " + self.last_server)
         try:
             self.server = Pyro4.Proxy("PYRONAME:%s" % self.last_server)
             iD = self.server.getLastId()
-            order = self.server.setOrder(iD + 1 , order_list,order_price,order_time)
+            order = self.server.setOrder(iD + 1 , order_list,order_price,order_time,name,postcode)
             return order
         except:
             # Last server not working
@@ -81,18 +81,23 @@ class FrontEnd(object):
         if len(active)==2:
             if active[0][1]>=active[1][1]:
                 self.server = Pyro4.Proxy("PYRONAME:%s" % active[0][0])
-                return self.server.setOrder(active[0][1] + 1, order_list,order_price,order_time)
+                return self.server.setOrder(active[0][1] + 1, order_list,order_price,order_time,name,postcode)
             else:
                 self.server = Pyro4.Proxy("PYRONAME:%s" % active[1][0])
-                return self.server.setOrder(active[1][1]+1, order_list,order_price,order_time)
+                return self.server.setOrder(active[1][1]+1, order_list,order_price,order_time,name,postcode)
         elif len(active)==1:
             self.server = Pyro4.Proxy("PYRONAME:%s" % active[0][0])
-            return self.server.setOrder(active[0][1]+1, order_list,order_price,order_time)
+            return self.server.setOrder(active[0][1]+1, order_list,order_price,order_time,name,postcode)
         else:
             return "No servers are active"
 
                 
-    
+    def checkAddress(self,postcode):
+        r = requests.get('https://api.postcodes.io/postcodes/'+postcode)
+        if r.json()['status'] != 200:
+            return 1
+        else:
+            return 0
     def getOrders(self):
         #server = connect()
         return self.server.getOrders()

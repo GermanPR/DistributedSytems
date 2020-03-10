@@ -1,23 +1,23 @@
-# saved as server.py 
 # python -m Pyro4.naming before running
-
 import Pyro4
 
 @Pyro4.expose
 class JustHungry(object):
+
+    # List of categories and products
     categories = ["starter", "main course", "drink", "dessert"]
-    products = [["salad", "starter", 4],
-            ["soup", "starter", 4],
-            ["salmon", "starter", 3],
-            ["sandwich", "main course", 7],
-            ["mac and cheese", "main course", 11],
-            ["peperoni pizza", "main course", 10],
-            ["coca-cola", "drink", 1],
-            ["fanta", "drink", 1.3],
-            ["water", "drink", 1.5],            
-            ["yogurt", "dessert", 3],
-            ["apple", "dessert", 2],
-            ["chocolate cake", "dessert", 4]]
+    products = [["salad", categories[0] , 4],
+            ["soup", categories[0], 4],
+            ["salmon", categories[0], 3],
+            ["sandwich", categories[1], 7],
+            ["mac and cheese", categories[1], 11],
+            ["peperoni pizza",categories[1], 10],
+            ["coca-cola", categories[2], 1],
+            ["fanta", categories[2], 1.3],
+            ["water", categories[2], 1.5],            
+            ["yogurt", categories[3], 3],
+            ["apple", categories[3], 2],
+            ["chocolate cake", categories[3], 4]]
 
     orders = []
     primary = 0
@@ -27,40 +27,51 @@ class JustHungry(object):
         self.primary = 0
     def isPrimary(self):
         return self.primary
+    # Get method for categories
     def getCategories(self):
         return self.categories
+    # Get method for products of a specific category
     def getProducts(self,category):
         category_products = []
         for product in self.products:
             if product[1]==category:
                 category_products.append(product)
         return category_products
+    
+    # Get method for the last Id in the orders array
     def getLastId(self):
+        # Check if orders is not empty
         if len(self.orders)>0:
-            print("in")
             return self.orders[len(self.orders)-1][0]
         else:
-            print("here")
             return 0
-    def setOrder(self,order_Id, order_list, order_price,order_time):
-        self.orders.append([order_Id,order_list, order_price,order_time])
+
+    # Sets an order (only used for the primary server) and then replicates the data onto the other 2 servers
+    def setOrder(self,order_Id, order_list, order_price,order_time,name,postcode):
+        # Sets the order
+        self.orders.append([order_Id,order_list, order_price,order_time,name,postcode])
+        print("An order was added")
         print(self.orders)
+        # Update the other 2 servers
         try:
             server = Pyro4.Proxy("PYRONAME:server2")
             server.updateOrders(self.orders)
         except:
-            print("Server2 is not running")
+            print("Can't update Server2 as it is not running")
             pass
         try:
             server = Pyro4.Proxy("PYRONAME:server3")
             server.updateOrders(self.orders)
         except:
-            print("Server3 is not running")
+            print("Can't update Server3 as it is not running")
             pass
         return "Your order has been placed"
+
+    # Get method for the orders
     def getOrders(self):
         return self.orders
     
+    # Update orders from primary server onto a secondary one
     def updateOrders(self, orders):
         try:
             self.orders.extend([order for order in orders if order not in self.orders])
@@ -70,18 +81,7 @@ class JustHungry(object):
             return "Error"
 
 
-    # def get_fortune(self, name):
-    #     return "Hello, {0}. Here is your fortune message:\n" \
-    #            "Behold the warranty -- the bold print giveth and the fine print taketh away.".format(name)
-    # def getmessage(self):
-    #     return self.hello
-    # def setmessage(self, newmessage):
-    #     self.hello = newmessage
-    #     server2 = Pyro4.Proxy("PYRONAME:server2")  
 
-    #     print(server2.avg(1,2,3))
-    #     print(server2.max(2,2,3))
-    #     return "The value of message was changed correctly"
 
 daemon = Pyro4.Daemon()                # make a Pyro daemon
 ns = Pyro4.locateNS()                  # find the name server

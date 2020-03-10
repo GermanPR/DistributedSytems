@@ -7,19 +7,9 @@ confirmation = input("Welcome to JustHungry, do you want to order? (y/n)")
 if confirmation=='y' or confirmation=='yes' or confirmation=='Y'or confirmation=='Yes':
     product = ''
     order = [[],0]
-    products = [["salad", "starter", 4],
-            ["soup", "starter", 4],
-            ["salmon", "starter", 3],
-            ["sandwich", "main course", 7],
-            ["mac and cheese", "main course", 110],
-            ["peperoni pizza", "main course", 10],
-            ["coca-cola", "drink", 1],
-            ["fanta", "drink", 1.3],
-            ["water", "drink", 1.5],            
-            ["yogurt", "dessert", 3],
-            ["apple", "dessert", 2],
-            ["chocolate cake", "dessert", 4]]
-    categories = ["starter", "main course", "drink", "dessert"]
+    name = input("What is your name?")
+    print("Hello %s!"%name)
+
     while True:
     # Need retrieving throug RMI from Front-end now done localy
         categories = fEnd.getCategories()
@@ -58,6 +48,9 @@ if confirmation=='y' or confirmation=='yes' or confirmation=='Y'or confirmation=
 
         again = input("Do you want to order something else?(y/n)")
         if again!='y' and again!='yes' and again!='Y' and again!='Yes':
+            if order[0]==[]:
+                print("Nothing was ordered")
+                exit()
             print("Your order is:")
             for k in range(len(order[0])):
                 print("%i. %s"%(k+1,order[0][k]))
@@ -65,8 +58,19 @@ if confirmation=='y' or confirmation=='yes' or confirmation=='Y'or confirmation=
             orderconf = input("Is your order ok? (y/n)")
             if orderconf=='y' or orderconf=='yes' or orderconf=='Y'or orderconf=='Yes':
                 #order is of the form order = [["salad","pizza","coca-cola"], 15.2]
+                postcode = input("What is your postcode?")
+                res = fEnd.checkAddress(postcode)
+                print(res)
+                while res:
+                    print("Unvalid postcode (type quit to exit)")
+                    
+                    postcode = input("What is your postcode?")
+                    res = fEnd.checkAddress(postcode)
+                    if postcode == 'quit':
+                        exit()
+                
                 print("Order registered")
-                print(fEnd.setOrder(order[0],order[1],strftime("%Y-%m-%d %H:%M:%S", gmtime())))
+                print(fEnd.setOrder(order[0],order[1],strftime("%Y-%m-%d %H:%M:%S", gmtime()),name,postcode))
                 print(fEnd.getOrders())
             else:
                 print("Your command was cancelled")
